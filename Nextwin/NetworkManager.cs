@@ -25,7 +25,17 @@ namespace Nextwin
 
             public bool IsConnected
             {
-                get { return _socket.Connected; }
+                get 
+                {
+                    try
+                    {
+                        return _socket.Connected; 
+                    }
+                    catch(Exception)
+                    {
+                        return false;
+                    }
+                }
             }
 
             private Socket _socket;
