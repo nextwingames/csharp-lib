@@ -9,6 +9,9 @@ namespace Nextwin
 {
     namespace Editor
     {
+		/// <summary>
+		/// 해당 클래스를 상속한 후 [CustomPropertyDrawer]를 통해 에디터 인스펙터창에 표시될 특정 SerializableDictionary를 추가할 수 있음
+		/// </summary>
 		[CustomPropertyDrawer(typeof(SerializableDictionary<string, AudioSource>))]
 		public class SerializableDictionaryPropertyDrawer : PropertyDrawer
 		{
