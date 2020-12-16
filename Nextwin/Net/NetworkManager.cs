@@ -38,15 +38,15 @@ namespace Nextwin
                 }
             }
 
-            private Socket _socket;
-            private HashSet<string> _connectedAddressSet = new HashSet<string>();
+            protected Socket _socket;
+            protected HashSet<string> _connectedAddressSet = new HashSet<string>();
 
             private NetworkManager() { }
 
             /// <summary>
             /// 서버에 연결
             /// </summary>
-            public void Connect(string ip, int port)
+            public virtual void Connect(string ip, int port)
             {
                 string address = ToAddress(ip, port);
 
@@ -72,7 +72,7 @@ namespace Nextwin
             /// <typeparam name="T"></typeparam>
             /// <param name="msgType"></param>
             /// <param name="obj"></param>            
-            public void Send<T>(int msgType, T obj)
+            public virtual void Send<T>(int msgType, T obj)
             {
                 byte[] data = JsonManager.ObjectToBytes(obj);
 
@@ -92,7 +92,7 @@ namespace Nextwin
             /// 헤더 수신
             /// </summary>
             /// <returns></returns>
-            public Header Receive()
+            public virtual Header Receive()
             {
                 byte[] head = new byte[Header.HeaderLength];
                 _socket.Receive(head, Header.HeaderLength, SocketFlags.None);
@@ -106,7 +106,7 @@ namespace Nextwin
             /// </summary>
             /// <param name="header"></param>
             /// <returns></returns>
-            public byte[] Receive(Header header)
+            public virtual byte[] Receive(Header header)
             {
                 int length = header.Length;
                 byte[] data = new byte[length];
@@ -117,7 +117,7 @@ namespace Nextwin
             /// <summary>
             /// 연결 해제
             /// </summary>
-            public void Disconnect()
+            public virtual void Disconnect()
             {
                 _socket.Close();
             }
