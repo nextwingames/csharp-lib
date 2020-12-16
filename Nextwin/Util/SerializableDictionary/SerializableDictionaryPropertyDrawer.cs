@@ -4,6 +4,8 @@ using UnityEditor;
 using System.Reflection;
 using System;
 using Nextwin.Util;
+using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace Nextwin
 {
@@ -13,6 +15,8 @@ namespace Nextwin
 		/// 해당 클래스를 상속한 후 [CustomPropertyDrawer]를 통해 에디터 인스펙터창에 표시될 특정 SerializableDictionary를 추가할 수 있음
 		/// </summary>
 		[CustomPropertyDrawer(typeof(SerializableDictionary<string, AudioSource>))]
+		[CustomPropertyDrawer(typeof(SerializableDictionary<string, RawImage>))]
+		[CustomPropertyDrawer(typeof(SerializableDictionary<string, VideoPlayer>))]
 		public class SerializableDictionaryPropertyDrawer : PropertyDrawer
 		{
 			const string KeysFieldName = "_keys";
