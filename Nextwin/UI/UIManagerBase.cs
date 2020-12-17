@@ -11,8 +11,8 @@ namespace Nextwin.UI
     /// <typeparam name="TEDialog">Dialog 식별자</typeparam>
     public abstract class UIManagerBase<TEFrame, TEDialog> : Singleton<UIManagerBase<TEFrame, TEDialog>>
     {
-        private Dictionary<TEFrame, UIFrame<TEFrame>> _frames;
-        private Dictionary<TEDialog, UIDialog<TEDialog>> _dialogs;
+        protected Dictionary<TEFrame, UIFrame<TEFrame>> _frames;
+        protected Dictionary<TEDialog, UIDialog<TEDialog>> _dialogs;
 
         protected virtual void Start()
         {
@@ -20,7 +20,7 @@ namespace Nextwin.UI
             FindUIs(ref _dialogs);
         }
 
-        public UIFrame<TEFrame> GetFrame(TEFrame frameID)
+        public virtual UIFrame<TEFrame> GetFrame(TEFrame frameID)
         {
             if(!_frames.ContainsKey(frameID))
             {
@@ -30,7 +30,7 @@ namespace Nextwin.UI
             return _frames[frameID];
         }
 
-        public UIDialog<TEDialog> GetDialog(TEDialog dialogID)
+        public virtual UIDialog<TEDialog> GetDialog(TEDialog dialogID)
         {
             if(!_dialogs.ContainsKey(dialogID))
             {
@@ -46,7 +46,7 @@ namespace Nextwin.UI
         /// <typeparam name="T">UIBase의 하위 클래스</typeparam>
         /// <typeparam name="TEUI">UIBase의 ID를 지정할 enum</typeparam>
         /// <param name="dic">UI를 담을 Dictionary</param>
-        private void FindUIs<T, TEUI>(ref Dictionary<TEUI, T> dic) where T : UIBase<TEUI>
+        protected virtual void FindUIs<T, TEUI>(ref Dictionary<TEUI, T> dic) where T : UIBase<TEUI>
         {
             dic = new Dictionary<TEUI, T>();
 
@@ -63,7 +63,7 @@ namespace Nextwin.UI
             }
         }
 
-        private bool IsDuplicatedID<T, TEUI>(TEUI id, Dictionary<TEUI, T> dic)
+        protected virtual bool IsDuplicatedID<T, TEUI>(TEUI id, Dictionary<TEUI, T> dic)
         {
             if(!dic.ContainsKey(id))
             {

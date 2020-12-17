@@ -8,21 +8,21 @@ using UnityEngine.Video;
 
 namespace Nextwin.Util
 {
-    public class VideoManager : Singleton<VideoManager>
+    public abstract class VideoManagerBase<TEScreen, TEVideoPlayer> : Singleton<VideoManagerBase<TEScreen, TEVideoPlayer>>
     {
         public delegate void Callback();
 
         [SerializeField, Header("Set your video resources path")]
         [Tooltip("If your videos are in Assets/Resources/Videos directory, set as \"Videos\"")]
-        private string _videoResourcesPath;
+        protected string _videoResourcesPath;
 
         [SerializeField, Header("Key: Screen name / Value: Screen to play video (RawImage)")]
-        private SerializableDictionary<string, RawImage> _screens;
+        protected SerializableDictionary<TEScreen, RawImage> _screens;
         [SerializeField, Header("Key: VideoPlayer name / Value: VideoPlayer component")]
-        private SerializableDictionary<string, VideoPlayer> _videoPlayers;
-        private Dictionary<string, Texture> _textures;
+        protected SerializableDictionary<TEVideoPlayer, VideoPlayer> _videoPlayers;
+        protected Dictionary<string, Texture> _textures;
 
-        private void Start()
+        protected virtual void Start()
         {
             CheckComponentsAssigned();
         }
@@ -31,9 +31,9 @@ namespace Nextwin.Util
         /// 비디오를 재생, 비디오가 끝나면 특정 작업을 실행 시킬 수 있음
         /// </summary>
         /// <param name="videoNameWithDirectoryName">재생할 비디오의 이름(설정한 VideoResourcesPath의 하위 폴더 안에 파일이 있다면 SubDir/VideoName과 같이 명시)</param>
-        /// <param name="videoPlayerName">비디오가 재생될 VideoPlayer 이름, VideoPlayer가 하나라면 생략 가능</param>
+        /// <param name="videoPlayerName">비디오가 재생될 VideoPlayer 이름</param>
         /// <param name="callback">비디오가 끝난 후 실행할 작업</param>
-        public void PlayVideo(string videoNameWithDirectoryName, string videoPlayerName = null, string screenName = null, Callback callback = null)
+        public virtual void PlayVideo(string videoNameWithDirectoryName, TEVideoPlayer videoPlayerName, TEScreen screenName, Callback callback = null)
         {
             VideoPlayer player = GetVideoPlayer(videoPlayerName);
             if(player == null)
@@ -78,9 +78,9 @@ namespace Nextwin.Util
         /// <summary>
         /// 모든 VideoPlayer 일시정지
         /// </summary>
-        public void PauseAll()
+        public virtual void PauseAll()
         {
-            foreach(KeyValuePair<string, VideoPlayer> item in _videoPlayers)
+            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
             {
                 item.Value.Pause();
             }
@@ -90,7 +90,7 @@ namespace Nextwin.Util
         /// 특정 VideoPlayer 일시정지
         /// </summary>
         /// <param name="videoPlayerName">일시정지 시키려는 VideoPlayer 이름</param>
-        public void Pause(string videoPlayerName)
+        public virtual void Pause(TEVideoPlayer videoPlayerName)
         {
             _videoPlayers[videoPlayerName].Pause();
         }
@@ -98,9 +98,9 @@ namespace Nextwin.Util
         /// <summary>
         /// 모든 VideoPlayer 재생
         /// </summary>
-        public void ResumeAll()
+        public virtual void ResumeAll()
         {
-            foreach(KeyValuePair<string, VideoPlayer> item in _videoPlayers)
+            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
             {
                 item.Value.Play();
             }
@@ -110,12 +110,12 @@ namespace Nextwin.Util
         /// 특정 VideoPlayer 재생
         /// </summary>
         /// <param name="videoPlayerName">일시정지 시키려는 VideoPlayer 이름</param>
-        public void Resume(string videoPlayerName)
+        public virtual void Resume(TEVideoPlayer videoPlayerName)
         {
             _videoPlayers[videoPlayerName].Play();
         }
 
-        private void CheckComponentsAssigned()
+        protected virtual void CheckComponentsAssigned()
         {
             if(_screens.Count == 0)
             {
@@ -129,24 +129,24 @@ namespace Nextwin.Util
             CheckTargetTextureAssigned();
         }
 
-        private void CheckTargetTextureAssigned()
+        protected virtual void CheckTargetTextureAssigned()
         {
-            foreach(KeyValuePair<string, VideoPlayer> item in _videoPlayers)
+            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
             {
                 Texture texture = item.Value.targetTexture;
                 if(texture == null)
                 {
                     Debug.LogError($"Assign target texture to {item.Key} VideoPlayer.");
                 }
-                _textures[item.Key] = texture;
+                _textures[item.Key.ToString()] = texture;
             }
         }
 
-        private VideoPlayer GetVideoPlayer(string videoPlayerName)
+        protected virtual VideoPlayer GetVideoPlayer(TEVideoPlayer videoPlayerName)
         {
             if(videoPlayerName == null)
             {
-                foreach(KeyValuePair<string, VideoPlayer> item in _videoPlayers)
+                foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
                 {
                     return item.Value;
                 }
@@ -161,11 +161,11 @@ namespace Nextwin.Util
             return _videoPlayers[videoPlayerName];
         }
 
-        private RawImage GetScreen(string screenName)
+        protected virtual RawImage GetScreen(TEScreen screenName)
         {
             if(screenName == null)
             {
-                foreach(KeyValuePair<string, RawImage> item in _screens)
+                foreach(KeyValuePair<TEScreen, RawImage> item in _screens)
                 {
                     return item.Value;
                 }
@@ -180,7 +180,7 @@ namespace Nextwin.Util
             return _screens[screenName];
         }
 
-        private IEnumerator FadeIn(RawImage screen)
+        protected virtual IEnumerator FadeIn(RawImage screen)
         {
             screen.gameObject.SetActive(true);
             Color32 color = screen.color;
@@ -194,7 +194,7 @@ namespace Nextwin.Util
             }
         }
 
-        private IEnumerator FadeOut(RawImage screen)
+        protected virtual IEnumerator FadeOut(RawImage screen)
         {
             Color32 color = screen.color;
 

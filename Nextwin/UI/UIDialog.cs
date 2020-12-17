@@ -9,7 +9,7 @@ namespace Nextwin.UI
         private RectTransform _rectTransform;
         private readonly float _waitForCallbackRate = 0.2f;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             _rectTransform = GetComponent<RectTransform>();
         }

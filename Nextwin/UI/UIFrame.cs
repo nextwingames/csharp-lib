@@ -10,7 +10,7 @@ namespace Nextwin.UI
         private Image _shadeImage;
         private MaskableGraphic[] _graphics;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             _graphics = GetComponentsInChildren<MaskableGraphic>();
             CreateShadeImage();
