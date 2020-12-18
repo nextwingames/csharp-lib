@@ -54,7 +54,6 @@ namespace Nextwin.UI
             while(!IsSameScale(scale, _rectTransform.localScale.x))
             {
                 _rectTransform.localScale += vector;
-                Debug.Log("width " + scale + " " + _rectTransform.localScale.x);
                 yield return new WaitForSeconds(_yieldTime);
             }
 
@@ -79,7 +78,6 @@ namespace Nextwin.UI
             while(!IsSameScale(scale, _rectTransform.localScale.y))
             {
                 _rectTransform.localScale += vector;
-                Debug.Log("height " + scale + " " + _rectTransform.localScale.y);
                 yield return new WaitForSeconds(_yieldTime);
             }
 

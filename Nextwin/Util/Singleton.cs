@@ -32,6 +32,9 @@ namespace Nextwin
                 }
             }
 
+            [SerializeField]
+            protected bool _dontDestroyOnLoad;
+
             protected virtual void Awake()
             {
                 var objs = FindObjectsOfType<T>();
@@ -39,6 +42,11 @@ namespace Nextwin
                 {
                     Destroy(gameObject);
                     return;
+                }
+
+                if(_dontDestroyOnLoad)
+                {
+                    DontDestroyOnLoad(gameObject);
                 }
             }
         }
