@@ -11,18 +11,21 @@ namespace Nextwin.Game
     /// </summary>
     public class PlayerControllerBase : MonoBehaviour
     {
+        [SerializeField]
+        protected bool _onControl = true;
+
         [Header("Transform(GameObject) Setting")]
         [SerializeField]
         protected Transform _body;
         [SerializeField]
         protected Transform _pivot;
         [SerializeField]
-        protected Transform _camera;
+        protected Camera _camera;
 
         [Header("Mouse Setting")]
         [SerializeField]
         protected bool _useMouse;
-        [SerializeField, Range(1, 25)]
+        [SerializeField, Range(1, 25), Tooltip("If you do not check Use Mouse, Mouse Sensitivity is not used")]
         protected int _mouseSensitivity = 12;
 
         [Header("Control Basic Key Setting")]
@@ -47,6 +50,8 @@ namespace Nextwin.Game
         protected float _speed;
         [SerializeField, Range(1f, 20f)]
         protected float _rotateSpeed = 10f;
+        [SerializeField]
+        protected float _jumpPower = 5f;
 
         [Header("Camera Setting")]
         [SerializeField, Range(0f, 50f)]
@@ -54,19 +59,30 @@ namespace Nextwin.Game
         [SerializeField, Range(0f, 50f)]
         protected float _cameraHeight = 5f;
         [SerializeField, Range(0f, 90f)]
-        protected float _cameraAngle = 15f;
+        protected float _cameraAngle = 20f;
         [SerializeField]
         protected float _cameraSpeed = 2f;
 
         protected Animator _animator;
+        protected Rigidbody _rigidBody;
+
         protected Vector3 _destPos;
         protected Vector3 _curPos;
         protected Vector3 _lookDir;
+
         protected bool _isMoving;
+        protected bool _isJumping;
+
+        protected virtual void Awake()
+        {
+            CheckHierarchy();
+        }
 
         protected virtual void Start()
         {
             _animator = _body.GetComponent<Animator>();
+            _rigidBody = _body.GetComponent<Rigidbody>();
+
             _speed = _walkSpeed;
             _destPos = _body.position;
         }
@@ -74,12 +90,14 @@ namespace Nextwin.Game
         protected virtual void Update()
         {
             InputKey();
+            RotateWithMouse();
         }
 
         protected virtual void FixedUpdate()
         {
-            Rotate();
+            RotateWithKeyboard();
             Move();
+            Jump();
         }
 
         protected virtual void LateUpdate()
@@ -90,7 +108,7 @@ namespace Nextwin.Game
         /// <summary>
         /// 캐릭터 이동
         /// </summary>
-        public virtual void Move()
+        protected virtual void Move()
         {
             if(!_isMoving)
             {
@@ -106,9 +124,24 @@ namespace Nextwin.Game
         }
 
         /// <summary>
+        /// 캐릭터 점프
+        /// </summary>
+        protected virtual void Jump()
+        {
+            if(!_isJumping)
+            {
+                return;
+            }
+
+            _rigidBody.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
+
+            _isJumping = false;
+        }
+
+        /// <summary>
         /// 캐릭터의 body를 따라 카메라를 이동
         /// </summary>
-        public virtual void MoveCamera()
+        protected virtual void MoveCamera()
         {
             if(_camera == null)
             {
@@ -117,7 +150,7 @@ namespace Nextwin.Game
 
             if(_useMouse)
             {
-
+                _camera.transform.localPosition = new Vector3(0, _cameraHeight, -_cameraDistance);
             }
             else
             {
@@ -125,9 +158,22 @@ namespace Nextwin.Game
                 backward *= _cameraDistance;
 
                 Vector3 camPos = new Vector3(_body.position.x, _body.position.y + _cameraHeight, _body.position.z + backward.z);
-                _camera.position = Vector3.Lerp(_camera.position, camPos, Time.deltaTime * _cameraSpeed);
+                _camera.transform.position = Vector3.Lerp(_camera.transform.position, camPos, Time.deltaTime * _cameraSpeed);
+            }
 
-                _camera.rotation = Quaternion.Euler(new Vector3(_cameraAngle, 0f, 0f));
+            RotateCamera();
+        }
+
+        protected virtual void RotateCamera()
+        {
+            Quaternion rotation = Quaternion.Euler(new Vector3(_cameraAngle, 0f, 0f));
+            if(_useMouse)
+            {
+                _camera.transform.localRotation = rotation;
+            }
+            else
+            {
+                _camera.transform.rotation = rotation;
             }
         }
 
@@ -140,6 +186,11 @@ namespace Nextwin.Game
         /// </summary>
         protected virtual void InputKey()
         {
+            if(!_onControl)
+            {
+                return;
+            }
+
             if(Input.GetKey(_runKey))
             {
                 OnInputRunKey();
@@ -172,52 +223,36 @@ namespace Nextwin.Game
 
         protected virtual void OnInputUpKey()
         {
-            if(_useMouse)
+            SetDestPos(_pivot.forward);
+            if(!_useMouse)
             {
-
-            }
-            else
-            {
-                SetDestPos(_pivot.forward);
                 SetLookDir(0f, 1f);
             }
         }
 
         protected virtual void OnInputDownKey()
         {
-            if(_useMouse)
+            SetDestPos(-_pivot.forward);
+            if(!_useMouse)
             {
-
-            }
-            else
-            {
-                SetDestPos(-_pivot.forward);
                 SetLookDir(0f, -1f);
             }
         }
 
         protected virtual void OnInputLeftKey()
         {
-            if(_useMouse)
+            SetDestPos(-_pivot.right);
+            if(!_useMouse)
             {
-
-            }
-            else
-            {
-                SetDestPos(-_pivot.right);
                 SetLookDir(-1f, 0f);
             }
         }
 
         protected virtual void OnInputRightKey()
         {
-            if(_useMouse)
+            SetDestPos(_pivot.right);
+            if(!_useMouse)
             {
-
-            }
-            else
-            {
-                SetDestPos(_pivot.right);
                 SetLookDir(1f, 0f);
             }
         }
@@ -264,19 +299,7 @@ namespace Nextwin.Game
 
         protected virtual void OnInputJumpKey()
         {
-
-        }
-
-        protected virtual void Rotate()
-        {
-            if(_useMouse)
-            {
-                RotateWithMouse();
-            }
-            else
-            {
-                RotateWithKeyboard();
-            }
+            _isJumping = true;
         }
 
         /// <summary>
@@ -284,6 +307,11 @@ namespace Nextwin.Game
         /// </summary>
         protected virtual void RotateWithMouse()
         {
+            if(!_onControl || !_useMouse)
+            {
+                return;
+            }
+
             float sensitivity = _mouseSensitivity / 10f;
             Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X") * sensitivity, Input.GetAxis("Mouse Y") * sensitivity);
             Vector3 camAngle = _pivot.rotation.eulerAngles;
@@ -292,7 +320,6 @@ namespace Nextwin.Game
 
             _body.rotation = Quaternion.Euler(0, camAngle.y + mouseDelta.x, camAngle.z);
             _pivot.rotation = Quaternion.Euler(x, camAngle.y + mouseDelta.x, camAngle.z);
-            Debug.Log(x);
         }
 
         /// <summary>
@@ -300,7 +327,7 @@ namespace Nextwin.Game
         /// </summary>
         protected virtual void RotateWithKeyboard()
         {
-            if(!_isMoving)
+            if(!_isMoving || _useMouse)
             {
                 return;
             }
@@ -309,6 +336,28 @@ namespace Nextwin.Game
             _body.rotation = Quaternion.Slerp(_body.rotation, Quaternion.Euler(0, angle, 0), _rotateSpeed * Time.fixedDeltaTime);
 
             _lookDir = new Vector3(0, 0, 0);
+        }
+
+        private void CheckHierarchy()
+        {
+            if(_useMouse)
+            {
+                if(!_pivot.IsChildOf(_body))
+                {
+                    Debug.LogError("Pivot should be child of Body.");
+                }
+                if(!_camera.transform.IsChildOf(_pivot))
+                {
+                    Debug.LogError("Camera should be child of Pivot.");
+                }
+            }
+            else
+            {
+                if(!_body.IsChildOf(_pivot))
+                {
+                    Debug.LogError("Body should be child of Pivot.");
+                }
+            }
         }
     }
 }
