@@ -1,7 +1,23 @@
-﻿using UnityEngine;
+﻿using Nextwin.Util;
+using System.Collections;
+using UnityEngine;
 
 namespace Nextwin.Game
 {
+    #region enum { FallDownAxis, TagOrLayer }
+    public enum FallDownAxis
+    {
+        X,
+        Z
+    }
+
+    public enum TagOrLayer
+    {
+        Tag,
+        Layer
+    }
+    #endregion
+
     /// <summary>
     /// Use Mouse에 체크되었다면
     /// 왼쪽이 최상위 부모 오른쪽이 최하위 자식일 때
@@ -11,9 +27,13 @@ namespace Nextwin.Game
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
+        #region Control
+        [Header("Control This Character")]
         [SerializeField]
         protected bool _onControl = true;
+        #endregion
 
+        #region Transform(GameObject) Setting
         [Header("Transform(GameObject) Setting")]
         [SerializeField]
         protected Transform _body;
@@ -21,13 +41,20 @@ namespace Nextwin.Game
         protected Transform _pivot;
         [SerializeField]
         protected Camera _camera;
+        protected CameraController _cameraController;
+        [SerializeField, Tooltip("Only need one foot")]
+        protected Rigidbody _foot;
+        #endregion
 
+        #region Mouse Setting
         [Header("Mouse Setting")]
         [SerializeField]
         protected bool _useMouse;
         [SerializeField, Range(1, 25), Tooltip("If you do not check Use Mouse, Mouse Sensitivity is not used")]
         protected int _mouseSensitivity = 12;
+        #endregion
 
+        #region Cotnrol Basic Key Setting
         [Header("Control Basic Key Setting")]
         [SerializeField]
         protected KeyCode _upKey = KeyCode.UpArrow;
@@ -41,7 +68,9 @@ namespace Nextwin.Game
         protected KeyCode _jumpKey = KeyCode.Space;
         [SerializeField]
         protected KeyCode _runKey = KeyCode.LeftShift;
+        #endregion
 
+        #region Player Setting
         [Header("Player Setting")]
         [SerializeField]
         protected float _walkSpeed = 4f;
@@ -52,30 +81,44 @@ namespace Nextwin.Game
         protected float _rotateSpeed = 10f;
         [SerializeField]
         protected float _jumpPower = 5f;
-
-        [Header("Camera Setting")]
-        [SerializeField, Range(0f, 50f)]
-        protected float _cameraDistance = 10f;
-        [SerializeField, Range(0f, 50f)]
-        protected float _cameraHeight = 5f;
-        [SerializeField, Range(0f, 90f)]
-        protected float _cameraAngle = 20f;
         [SerializeField]
-        protected float _cameraSpeed = 2f;
+        protected float _wakeUpSpeed = 3f;
+        #endregion
 
+        #region Ground Setting
+        [Header("Ground Setting")]
+        [SerializeField]
+        protected TagOrLayer _checkGroundByTagOrLayer;
+        [SerializeField]
+        protected string _groundTagOrLayer;
+        #endregion
+
+        #region Components
         protected Animator _animator;
         protected Rigidbody _rigidBody;
+        #endregion
 
+        #region Transforms
         protected Vector3 _destPos;
         protected Vector3 _curPos;
         protected Vector3 _lookDir;
+        #endregion
 
+        #region States
         protected bool _isMoving;
         protected bool _isJumping;
+        protected bool _isFallDown;
+        protected bool _isWakingUp;
+        protected bool _isOnGround;
+        protected FallDownAxis _fallDownAxis;
+        #endregion
+
+        protected delegate void Callback();
 
         protected virtual void Awake()
         {
             CheckHierarchy();
+            SetCameraController();
         }
 
         protected virtual void Start()
@@ -84,17 +127,21 @@ namespace Nextwin.Game
             _rigidBody = _body.GetComponent<Rigidbody>();
 
             _speed = _walkSpeed;
-            _destPos = _body.position;
+            _destPos = _body.localPosition;
+
+            SetFootCollisionChecker();
         }
 
         protected virtual void Update()
         {
             InputKey();
             RotateWithMouse();
+            CheckFallDown();
         }
 
         protected virtual void FixedUpdate()
         {
+            WakeUp();
             RotateWithKeyboard();
             Move();
             Jump();
@@ -102,148 +149,8 @@ namespace Nextwin.Game
 
         protected virtual void LateUpdate()
         {
-            MoveCamera();
-            RotateCamera();
-        }
-
-        /// <summary>
-        /// 캐릭터 이동
-        /// </summary>
-        protected virtual void Move()
-        {
-            if(!_isMoving)
-            {
-                return;
-            }
-            OnMoveStart();
-
-            _curPos = _destPos;
-            _body.position = _destPos;
-
-            _isMoving = false;
-            OnMoveEnd();
-        }
-
-        protected virtual void OnMoveStart() { }
-
-        protected virtual void OnMoveEnd() { }
-
-        /// <summary>
-        /// 캐릭터 점프
-        /// </summary>
-        protected virtual void Jump()
-        {
-            if(!_isJumping)
-            {
-                return;
-            }
-            OnJumpStart();
-
-            _rigidBody.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
-
-            _isJumping = false;
-            OnJumpEnd();
-        }
-
-        protected virtual void OnJumpStart() { }
-
-        protected virtual void OnJumpEnd() { }
-
-        /// <summary>
-        /// 마우스로 회전
-        /// </summary>
-        protected virtual void RotateWithMouse()
-        {
-            if(!_onControl || !_useMouse)
-            {
-                return;
-            }
-
-            float sensitivity = _mouseSensitivity / 10f;
-            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X") * sensitivity, Input.GetAxis("Mouse Y") * sensitivity);
-            Vector3 camAngle = _pivot.rotation.eulerAngles;
-            float x = camAngle.x - mouseDelta.y;
-            x = x < 180f ? Mathf.Clamp(x, -1f, 70f) : Mathf.Clamp(x, 345f, 361f);
-
-            _body.rotation = Quaternion.Euler(0, camAngle.y + mouseDelta.x, camAngle.z);
-            _pivot.rotation = Quaternion.Euler(x, camAngle.y + mouseDelta.x, camAngle.z);
-        }
-
-        /// <summary>
-        /// 키보드 입력으로만 회전
-        /// </summary>
-        protected virtual void RotateWithKeyboard()
-        {
-            if(!_isMoving || _useMouse)
-            {
-                return;
-            }
-
-            float angle = Mathf.Atan2(_lookDir.x, _lookDir.z) * Mathf.Rad2Deg;
-            _body.rotation = Quaternion.Slerp(_body.rotation, Quaternion.Euler(0, angle, 0), _rotateSpeed * Time.fixedDeltaTime);
-
-            _lookDir = new Vector3(0, 0, 0);
-        }
-
-        /// <summary>
-        /// 캐릭터의 body를 따라 카메라를 이동
-        /// </summary>
-        protected virtual void MoveCamera()
-        {
-            if(_camera == null)
-            {
-                return;
-            }
-
-            if(_useMouse)
-            {
-                MoveCameraUsingMouse();
-            }
-            else
-            {
-                MoveCameraNotUsingMouse();
-            }   
-        }
-
-        protected virtual void MoveCameraUsingMouse()
-        {
-            _camera.transform.localPosition = new Vector3(0, _cameraHeight, -_cameraDistance);
-        }
-
-        protected virtual void MoveCameraNotUsingMouse()
-        {
-            Vector3 backward = -_pivot.forward;
-            backward *= _cameraDistance;
-
-            Vector3 camPos = new Vector3(_body.position.x, _body.position.y + _cameraHeight, _body.position.z + backward.z);
-            _camera.transform.position = Vector3.Lerp(_camera.transform.position, camPos, Time.deltaTime * _cameraSpeed);
-        }
-
-        /// <summary>
-        /// 카메라 회전(바라보는 방향 설정)
-        /// </summary>
-        protected virtual void RotateCamera()
-        {
-            Quaternion rotation = Quaternion.Euler(new Vector3(_cameraAngle, 0f, 0f));
-            
-            if(_useMouse)
-            {
-                RotateCameraUsingMouse(rotation);
-            }
-            else
-            {
-                RotateCameraNotUsingMouse(rotation);
-            }
-        }
-
-        protected virtual void RotateCameraUsingMouse(Quaternion rotation)
-        {
-            _camera.transform.localRotation = rotation;
-        }
-
-        protected virtual void RotateCameraNotUsingMouse(Quaternion rotation)
-        {
-            _camera.transform.rotation = rotation;
+            _cameraController.Move(_useMouse);
+            _cameraController.Rotate(_useMouse);
         }
 
         /// <summary>
@@ -251,7 +158,7 @@ namespace Nextwin.Game
         /// </summary>
         protected virtual void InputKey()
         {
-            if(!_onControl)
+            if(!_onControl || _isFallDown)
             {
                 return;
             }
@@ -286,6 +193,7 @@ namespace Nextwin.Game
             }
         }
 
+        #region OnInput
         protected virtual void OnInputUpKey()
         {
             SetDestPos(_pivot.forward);
@@ -326,6 +234,45 @@ namespace Nextwin.Game
             _isMoving = true;
         }
 
+        protected virtual void OnInputRunKey()
+        {
+            _speed = _runSpeed;
+        }
+
+        protected virtual void OnReleaseRunKey()
+        {
+            _speed = _walkSpeed;
+        }
+
+        protected virtual void OnInputJumpKey()
+        {
+            _isJumping = true;
+        }
+        #endregion
+
+        #region Character Move
+        /// <summary>
+        /// 캐릭터 이동
+        /// </summary>
+        protected virtual void Move()
+        {
+            if(!_isMoving || _isFallDown)
+            {
+                return;
+            }
+            OnMoveStart();
+
+            _curPos = _destPos;
+            _body.localPosition = _destPos;
+
+            _isMoving = false;
+            OnMoveFinish();
+        }
+
+        protected virtual void OnMoveStart() { }
+
+        protected virtual void OnMoveFinish() { }
+
         /// <summary>
         /// 입력을 받고 이동 목적지 설정
         /// </summary>
@@ -334,7 +281,169 @@ namespace Nextwin.Game
         {
             Vector3 dir = new Vector3(vector.x, 0f, vector.z).normalized;
             _destPos += dir * Time.deltaTime * _speed;
-            _destPos.y = _body.position.y;
+            _destPos.y = _body.localPosition.y;
+        }
+        #endregion
+
+        #region Character Jump
+        /// <summary>
+        /// 캐릭터 점프
+        /// </summary>
+        protected virtual void Jump()
+        {
+            //Debug.Log(_isOnGround);
+            if(!_isJumping || _isFallDown || !_isOnGround)
+            {
+                return;
+            }
+            OnJumpStart();
+
+            _rigidBody.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
+
+            _isJumping = false;
+            OnJumpFinish();
+        }
+
+
+        protected virtual void OnJumpStart() { }
+
+        protected virtual void OnJumpFinish() { }
+        #endregion
+
+        #region Fall Down & Wake Up
+        /// <summary>
+        /// 넘어졌는지 검사
+        /// </summary>
+        protected virtual void CheckFallDown()
+        {
+            Vector3 euler = _body.eulerAngles;
+
+            if(euler.x >= 90f && euler.x <= 270f)
+            {
+                ChangeStateFallDown(FallDownAxis.X);
+            }
+            else if(euler.z >= 90f && euler.z <= 270f)
+            {
+                ChangeStateFallDown(FallDownAxis.Z);
+            }
+        }
+
+        /// <summary>
+        /// 넘어진 상태로 변경
+        /// </summary>
+        /// <param name="axis"></param>
+        protected virtual void ChangeStateFallDown(FallDownAxis axis)
+        {
+            if(!_isOnGround)
+            {
+                return;
+            }
+
+            _fallDownAxis = axis;
+            _isFallDown = true;
+        }
+
+        /// <summary>
+        /// 넘어졌을 때 일어남
+        /// </summary>
+        protected virtual void WakeUp()
+        {
+            if(!_isFallDown || _isWakingUp)
+            {
+                return;
+            }
+            _isMoving = false;
+            _isJumping = false;
+
+            Rigidbody rigidbody = _body.GetComponent<Rigidbody>();
+            rigidbody.isKinematic = true;
+
+            OnWakeUpStart();
+
+            StartCoroutine(TryWakeUp(() =>
+            {
+                _isFallDown = false;
+                rigidbody.isKinematic = false;
+
+                OnWakeUpFinish();
+            }));
+        }
+
+        protected virtual void OnWakeUpStart() { }
+
+        protected virtual void OnWakeUpFinish() { }
+
+        /// <summary>
+        /// 실제로 일어나는 행동을 취하는 코루틴
+        /// </summary>
+        /// <param name="afterWakeUp">일어난 후 실행할 일</param>
+        /// <returns></returns>
+        protected virtual IEnumerator TryWakeUp(Callback afterWakeUp)
+        {
+            _isWakingUp = true;
+
+            Vector3 euler = _body.eulerAngles;
+            Vector3 wakeUpEuler = _fallDownAxis == FallDownAxis.X ? new Vector3(0, euler.y, euler.z) : new Vector3(euler.x, euler.y, 0);
+
+            while(!IsWakeUpFinished(euler))
+            {
+                euler = Vector3.Lerp(euler, wakeUpEuler, _wakeUpSpeed * Time.fixedDeltaTime * 0.1f);
+                _body.rotation = Quaternion.Euler(euler);
+
+                yield return new WaitForSeconds(0.01f);
+            }
+
+            _isWakingUp = false;
+            afterWakeUp.Invoke();
+        }
+
+        private bool IsWakeUpFinished(Vector3 euler)
+        {
+            float rotateValue = _fallDownAxis == FallDownAxis.X ? euler.x : euler.z;
+
+            if(rotateValue > 5f)
+            {
+                return false;
+            }
+            return true;
+        }
+        #endregion
+
+        #region Character Rotate
+        /// <summary>
+        /// 마우스로 회전
+        /// </summary>
+        protected virtual void RotateWithMouse()
+        {
+            if(!_onControl || !_useMouse)
+            {
+                return;
+            }
+
+            float sensitivity = _mouseSensitivity / 10f;
+            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X") * sensitivity, Input.GetAxis("Mouse Y") * sensitivity);
+            Vector3 camAngle = _pivot.rotation.eulerAngles;
+            float x = camAngle.x - mouseDelta.y;
+            x = x < 180f ? Mathf.Clamp(x, -1f, 70f) : Mathf.Clamp(x, 345f, 361f);
+
+            _body.rotation = Quaternion.Euler(0, camAngle.y + mouseDelta.x, camAngle.z);
+            _pivot.rotation = Quaternion.Euler(x, camAngle.y + mouseDelta.x, camAngle.z);
+        }
+
+        /// <summary>
+        /// 키보드 입력으로만 회전
+        /// </summary>
+        protected virtual void RotateWithKeyboard()
+        {
+            if(!_isMoving || _useMouse)
+            {
+                return;
+            }
+
+            float angle = Mathf.Atan2(_lookDir.x, _lookDir.z) * Mathf.Rad2Deg;
+            _body.rotation = Quaternion.Slerp(_body.rotation, Quaternion.Euler(0, angle, 0), _rotateSpeed * Time.fixedDeltaTime);
+
+            _lookDir = new Vector3(0, 0, 0);
         }
 
         /// <summary>
@@ -353,22 +462,46 @@ namespace Nextwin.Game
                 _lookDir = new Vector3(x, 0, _lookDir.z);
             }
         }
+        #endregion
 
-        protected virtual void OnInputRunKey()
+        #region Collision
+        /// <summary>
+        /// 땅 위에 있는지 검사
+        /// </summary>
+        /// <param name="collision">충돌체</param>
+        /// <param name="isEnter">충돌체 충돌이 Enter인지 Exit인지</param>
+        protected virtual void CheckStandOnGround(Collider collider, bool isEnter)
         {
-            _speed = _runSpeed;
+            switch(_checkGroundByTagOrLayer)
+            {
+                case TagOrLayer.Tag:
+                    CheckStandOnGround(collider.tag, isEnter);
+                    break;
+
+                case TagOrLayer.Layer:
+                    CheckStandOnGround(collider.gameObject.layer, isEnter);
+                    break;
+            }
         }
 
-        protected virtual void OnReleaseRunKey()
+        protected virtual void CheckStandOnGround(string tag, bool isEnter)
         {
-            _speed = _walkSpeed;
+            if(tag.Equals(_groundTagOrLayer))
+            {
+                _isOnGround = isEnter;
+            }
         }
 
-        protected virtual void OnInputJumpKey()
+        protected virtual void CheckStandOnGround(int layer, bool isEnter)
         {
-            _isJumping = true;
+            if(layer == LayerMask.NameToLayer(_groundTagOrLayer))
+            {
+                _isOnGround = isEnter;
+            }
         }
+        #endregion
 
+        #region Awake
         private void CheckHierarchy()
         {
             if(_useMouse)
@@ -390,5 +523,41 @@ namespace Nextwin.Game
                 }
             }
         }
+
+        private void SetCameraController()
+        {
+            _cameraController = _camera.gameObject.GetComponent<CameraController>();
+            if(_cameraController == null)
+            {
+                _camera.gameObject.AddComponent<CameraController>();
+                _cameraController = _camera.gameObject.GetComponent<CameraController>();
+            }
+
+            _cameraController.Target = _body;
+            _cameraController.TargetPivot = _pivot;
+        }
+        #endregion
+
+        #region Start
+        private void SetFootCollisionChecker()
+        {
+            if(_foot == null)
+            {
+                _foot = _rigidBody;
+            }
+
+            OtherCollisionChecker footCollisionChecker = _foot.gameObject.AddComponent<OtherCollisionChecker>();
+
+            footCollisionChecker.AddCollisionEvent(CollisionEvent.OnCollisionEnter, (collider) =>
+            {
+                CheckStandOnGround(collider, true);
+            });
+
+            footCollisionChecker.AddCollisionEvent(CollisionEvent.OnCollisionExit, (collider) =>
+            {
+                CheckStandOnGround(collider, false);
+            });
+        }
+        #endregion
     }
 }
