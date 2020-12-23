@@ -52,7 +52,7 @@ namespace Nextwin.UI
 
             foreach(T ui in FindObjectsOfType(typeof(T)))
             {
-                if(IsDuplicatedID(ui.ID, dic))
+                if(dic.ContainsKey(ui.ID))
                 {
                     Debug.LogError($"Duplicated ID {ui.ID} of {ui.gameObject.name}.");
                     continue;
@@ -61,16 +61,6 @@ namespace Nextwin.UI
                 dic.Add(ui.ID, ui);
                 ui.Show(false);
             }
-        }
-
-        protected virtual bool IsDuplicatedID<T, TEUI>(TEUI id, Dictionary<TEUI, T> dic)
-        {
-            if(!dic.ContainsKey(id))
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

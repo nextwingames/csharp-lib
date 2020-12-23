@@ -66,7 +66,7 @@ namespace Nextwin.Game
 
             Service.Service service = null;
             IDto dto = null;
-            Service(header.MsgType, data, service, dto);
+            CreateService(header.MsgType, data, service, dto);
 
             if(service == null)
             {
@@ -82,6 +82,6 @@ namespace Nextwin.Game
         /// <param name="data">JsonManager를 사용하여 DTO로 변환하기 위한 데이터</param>
         /// <param name="service">실질적인 작업을 수행할 서비스 객체</param>
         /// <param name="dto">data이 JsonManager를 통해 변환된 결과를 받는 DTO</param>
-        protected abstract void Service(int msgType, byte[] data, Service.Service service, IDto dto);
+        protected abstract void CreateService(int msgType, byte[] data, Service.Service service, IDto dto);
     }
 }
