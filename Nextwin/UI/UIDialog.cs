@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nextwin.Util;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -38,6 +39,15 @@ namespace Nextwin.UI
                     }));
                 }));
             }
+        }
+
+        /// <summary>
+        /// showTime동안 대화상자가 나타나고 사라짐
+        /// </summary>
+        /// <param name="showTimeSeconds">대화상자가 활성화 되어있을 시간(초)</param>
+        public virtual void PopupForSeconds(float showTimeSeconds)
+        {
+            ActionManager.Instance.ExecuteWithDelay(() => { Show(true); }, () => { Show(false); }, showTimeSeconds);
         }
 
         /// <summary>
