@@ -20,7 +20,9 @@ namespace Nextwin.Util
         protected SerializableDictionary<TEScreen, RawImage> _screens;
         [SerializeField, Header("Key: VideoPlayer name / Value: VideoPlayer component")]
         protected SerializableDictionary<TEVideoPlayer, VideoPlayer> _videoPlayers;
-        protected Dictionary<string, Texture> _textures;
+        protected Dictionary<string, Texture> _textures = new Dictionary<string, Texture>();
+
+        protected float _waitForCallbackExecute = 3f;
 
         protected virtual void Start()
         {
@@ -41,10 +43,9 @@ namespace Nextwin.Util
                 return;
             }
 
-            VideoClip clip = Resources.Load<VideoClip>($"{_videoResourcesPath}/{videoNameWithDirectoryName}");
+            VideoClip clip = GetVideoClip(videoNameWithDirectoryName);
             if(clip == null)
             {
-                Debug.LogError($"There is no video named {videoNameWithDirectoryName}");
                 return;
             }
 
@@ -59,7 +60,7 @@ namespace Nextwin.Util
                 player.Play();
             }, () =>
             {
-                StartCoroutine(FadeIn(screen));
+                OnScreenOn(screen);
             }, 0.5f);
 
             player.loopPointReached += (videoPlayer) =>
@@ -67,11 +68,11 @@ namespace Nextwin.Util
                 // 비디오가 끝난 후 waitAndCallback초 후에 callback 실행
                 ActionManager.Instance.ExecuteWithDelay(() =>
                 {
-                    StartCoroutine(FadeOut(screen));
+                    OnScreenOff(screen);
                 }, () =>
                 {
                     callback?.Invoke();
-                }, 3f);
+                }, _waitForCallbackExecute);
             };
         }
 
@@ -115,33 +116,6 @@ namespace Nextwin.Util
             _videoPlayers[videoPlayerName].Play();
         }
 
-        protected virtual void CheckComponentsAssigned()
-        {
-            if(_screens.Count == 0)
-            {
-                Debug.LogError("There is no screen assgined for VideoManager.");
-            }
-            if(_videoPlayers.Count == 0)
-            {
-                Debug.LogError("There is no VideoPlayer assgined for VideoManager.");
-            }
-
-            CheckTargetTextureAssigned();
-        }
-
-        protected virtual void CheckTargetTextureAssigned()
-        {
-            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
-            {
-                Texture texture = item.Value.targetTexture;
-                if(texture == null)
-                {
-                    Debug.LogError($"Assign target texture to {item.Key} VideoPlayer.");
-                }
-                _textures[item.Key.ToString()] = texture;
-            }
-        }
-
         protected virtual VideoPlayer GetVideoPlayer(TEVideoPlayer videoPlayerName)
         {
             if(videoPlayerName == null)
@@ -161,6 +135,18 @@ namespace Nextwin.Util
             return _videoPlayers[videoPlayerName];
         }
 
+        protected virtual VideoClip GetVideoClip(string videoNameWithDirectoryName)
+        {
+            VideoClip clip = Resources.Load<VideoClip>($"{_videoResourcesPath}/{videoNameWithDirectoryName}");
+
+            if(clip == null)
+            {
+                Debug.LogError($"There is no video named {videoNameWithDirectoryName}");
+            }
+
+            return clip;
+        }
+
         protected virtual RawImage GetScreen(TEScreen screenName)
         {
             if(screenName == null)
@@ -178,6 +164,16 @@ namespace Nextwin.Util
             }
 
             return _screens[screenName];
+        }
+
+        protected virtual void OnScreenOn(RawImage screen)
+        {
+            StartCoroutine(FadeIn(screen));
+        }
+
+        protected virtual void OnScreenOff(RawImage screen)
+        {
+            StartCoroutine(FadeOut(screen));
         }
 
         protected virtual IEnumerator FadeIn(RawImage screen)
@@ -207,6 +203,34 @@ namespace Nextwin.Util
             }
 
             screen.gameObject.SetActive(false);
+        }
+
+        protected virtual void CheckComponentsAssigned()
+        {
+            if(_screens.Count == 0)
+            {
+                Debug.LogError("There is no screen assgined for VideoManager.");
+            }
+            if(_videoPlayers.Count == 0)
+            {
+                Debug.LogError("There is no VideoPlayer assgined for VideoManager.");
+            }
+
+            CheckTargetTextureAssigned();
+        }
+
+        protected virtual void CheckTargetTextureAssigned()
+        {
+            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
+            {
+                Texture texture = item.Value.targetTexture;
+                if(texture == null)
+                {
+                    Debug.LogError($"Assign target texture to {item.Key} VideoPlayer.");
+                }
+
+                _textures.Add(item.Key.ToString(), texture);
+            }
         }
     }
 }
