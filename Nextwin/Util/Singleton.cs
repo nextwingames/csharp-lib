@@ -4,7 +4,7 @@ namespace Nextwin
 {
     namespace Util
     {
-        public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
+        public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
         {
             private static T _instance;
             public static T Instance
@@ -18,11 +18,11 @@ namespace Nextwin
                         {
                             _instance = obj;
                         }
-                        //else
-                        //{
-                        //    var newsingletone = new GameObject().AddComponent<T>();
-                        //    _instance = newsingletone;
-                        //}
+                        else
+                        {
+                            var newsingleton = new GameObject().AddComponent<T>();
+                            _instance = newsingleton;
+                        }
                     }
                     return _instance;
                 }
