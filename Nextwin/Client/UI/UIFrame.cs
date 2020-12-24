@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Nextwin.UI
+namespace Nextwin.Client.UI
 {
     public abstract class UIFrame<TEFrame> : UIBase<TEFrame>
     {

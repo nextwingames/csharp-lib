@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Nextwin.Util
+namespace Nextwin.Client.Util
 {
     public enum CollisionEvent
     {

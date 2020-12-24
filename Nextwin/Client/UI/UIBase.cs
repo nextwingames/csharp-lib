@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Nextwin.UI
+namespace Nextwin.Client.UI
 {
     public abstract class UIBase<TEUI> : MonoBehaviour
     {

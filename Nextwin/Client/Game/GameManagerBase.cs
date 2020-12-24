@@ -1,9 +1,9 @@
-﻿using Nextwin.Net;
+﻿using Nextwin.Client.Util;
+using Nextwin.Net;
 using Nextwin.Protocol;
-using Nextwin.Util;
 using System.Threading;
 
-namespace Nextwin.Game
+namespace Nextwin.Client.Game
 {
     /// <summary>
     /// NetworkManager를 사용하여 서버와 통신하기 위한 GameManager의 상위 클래스

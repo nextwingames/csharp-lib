@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Nextwin.Util
+namespace Nextwin.Client.Util
 {
     public abstract class VideoManagerBase<TEScreen, TEVideoPlayer> : Singleton<VideoManagerBase<TEScreen, TEVideoPlayer>>
     {

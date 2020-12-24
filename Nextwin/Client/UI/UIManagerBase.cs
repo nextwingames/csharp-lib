@@ -1,8 +1,8 @@
-﻿using Nextwin.Util;
+﻿using Nextwin.Client.Util;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Nextwin.UI
+namespace Nextwin.Client.UI
 {
     /// <summary>
     /// UIManager의 base 추상 클래스, TEFrame과 TEDialog에 대응하는 enum을 정의해야함

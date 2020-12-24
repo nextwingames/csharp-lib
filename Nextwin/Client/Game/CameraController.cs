@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Nextwin.Game
+namespace Nextwin.Client.Game
 {
     public class CameraController : MonoBehaviour
     {

@@ -1,11 +1,11 @@
-﻿using Nextwin.Net;
+﻿using Nextwin.Client.Util;
+using Nextwin.Net;
 using Nextwin.Protocol;
-using Nextwin.Util;
 using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 
-namespace Nextwin.Game
+namespace Nextwin.Client.Game
 {
     /// <summary>
     /// 네트워크 스레드 작업자

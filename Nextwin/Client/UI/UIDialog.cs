@@ -1,9 +1,9 @@
-﻿using Nextwin.Util;
+﻿using Nextwin.Client.Util;
 using System;
 using System.Collections;
 using UnityEngine;
 
-namespace Nextwin.UI
+namespace Nextwin.Client.UI
 {
     public abstract class UIDialog<TEDialog> : UIBase<TEDialog>
     {

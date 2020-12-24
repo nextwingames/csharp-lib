@@ -1,8 +1,8 @@
-﻿using Nextwin.Util;
+﻿using Nextwin.Client.Util;
 using System.Collections;
 using UnityEngine;
 
-namespace Nextwin.Game
+namespace Nextwin.Client.Game
 {
     #region enum { FallDownAxis, TagOrLayer }
     public enum FallDownAxis

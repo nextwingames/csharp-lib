@@ -3,11 +3,10 @@ using UnityEngine;
 using UnityEditor;
 using System.Reflection;
 using System;
-using Nextwin.Util;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Nextwin
+namespace Nextwin.Client.Util
 {
     namespace Editor
     {
