@@ -1,29 +1,41 @@
 ﻿using Nextwin.Client.Util;
 using Nextwin.Net;
 using Nextwin.Protocol;
+using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 
 namespace Nextwin.Client.Game
 {
+    [RequireComponent(typeof(NetworkThreadManager))]
     /// <summary>
     /// NetworkManager를 사용하여 서버와 통신하기 위한 GameManager의 상위 클래스
     /// </summary>
     public abstract class GameManagerBase : Singleton<GameManagerBase>
     {
         protected NetworkManager _networkManager;
-        private Thread _networkThread;
+        protected Thread _networkThread;
+
+        [SerializeField]
+        protected string _ip = "127.0.0.1";
+        [SerializeField]
+        protected int _port;
+
+        [SerializeField]
 
         protected virtual void Start()
         {
-            SetNetworkManager();
+            _networkManager = CreateNetworkManager();
+            _networkManager.Connect(_ip, _port);
         }
 
         /// <summary>
-        /// 적절한 NetworkManager 세팅
+        /// Network Manager 생성
         /// </summary>
-        protected virtual void SetNetworkManager()
+        /// <returns></returns>
+        protected virtual NetworkManager CreateNetworkManager()
         {
-            _networkManager = NetworkManager.Instance;
+            return new NetworkManager();
         }
 
         protected virtual void Update()
@@ -37,7 +49,7 @@ namespace Nextwin.Client.Game
             CheckServiceQueue();
         }
 
-        private void CreateNetworkThread()
+        protected virtual void CreateNetworkThread()
         {
             if(_networkThread != null)
             {
@@ -56,17 +68,12 @@ namespace Nextwin.Client.Game
                 return;
             }
 
-            if(!NetworkThreadManager.Instance.ServiceQueue.TryDequeue(out DataBundle dataBundle))
+            if(!NetworkThreadManager.Instance.ServiceQueue.TryDequeue(out Dictionary<string, object> receivedData))
             {
                 return;
             }
-
-            Header header = dataBundle.Header;
-            byte[] data = dataBundle.Data;
-
-            Service.Service service = null;
-            IDto dto = null;
-            CreateService(header.MsgType, data, service, dto);
+            
+            OnReceivedData(receivedData, out Service service);
 
             if(service == null)
             {
@@ -76,12 +83,10 @@ namespace Nextwin.Client.Game
         }
 
         /// <summary>
-        /// msgType에 따라 service 객체와 dto 객체를 생성
+        /// 수신한 Dictionary가 가지고 있는 Key 값에 따라 적절한 service 객체와 dto 객체 생성
         /// </summary>
-        /// <param name="msgType">Protocol에 정의되어 있는 메시지 타입</param>
-        /// <param name="data">JsonManager를 사용하여 DTO로 변환하기 위한 데이터</param>
+        /// <param name="receivedData">수신한 데이터</param>
         /// <param name="service">실질적인 작업을 수행할 서비스 객체</param>
-        /// <param name="dto">data이 JsonManager를 통해 변환된 결과를 받는 DTO</param>
-        protected abstract void CreateService(int msgType, byte[] data, Service.Service service, IDto dto);
+        protected abstract void OnReceivedData(Dictionary<string, object> receivedData, out Service service);
     }
 }

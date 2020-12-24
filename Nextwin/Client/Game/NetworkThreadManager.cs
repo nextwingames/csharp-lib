@@ -1,7 +1,7 @@
 ﻿using Nextwin.Client.Util;
 using Nextwin.Net;
-using Nextwin.Protocol;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
@@ -12,18 +12,20 @@ namespace Nextwin.Client.Game
     /// </summary>
     public class NetworkThreadManager : Singleton<NetworkThreadManager>
     {
-        public ConcurrentQueue<DataBundle> ServiceQueue { get; private set; }
+        public ConcurrentQueue<Dictionary<string, object>> ServiceQueue { get; private set; }
         private NetworkManager _networkManager;
+        [SerializeField]
+        private int _sleepTime = 0;
 
         /// <summary>
         /// 네트워크 스레드 생성
         /// </summary>
-        /// <param name="networkManager">게임매니저에서 사용하는 NetworkManager</param>
-        /// <returns>서버와 통신하는 스레드</returns>
+        /// <param name="networkManager">게임에서 사용하는 NetworkManager</param>
+        /// <returns></returns>
         public Thread CreateNetworkThread(NetworkManager networkManager = null)
         {
-            _networkManager = networkManager ?? NetworkManager.Instance;
-            ServiceQueue = new ConcurrentQueue<DataBundle>();
+            _networkManager = networkManager ?? new NetworkManager();
+            ServiceQueue = new ConcurrentQueue<Dictionary<string, object>>();
             return new Thread(new ThreadStart(CheckReceivingAndEnqueueServices));
         }
 
@@ -33,13 +35,14 @@ namespace Nextwin.Client.Game
 
             while(_networkManager.IsConnected)
             {
-                Header header = NetworkManager.Instance.Receive();
-                byte[] data = NetworkManager.Instance.Receive(header);
+                Dictionary<string, object> receivedData = _networkManager.Receive();
+                ServiceQueue.Enqueue(receivedData);
 
-                DataBundle dataBundle = new DataBundle(header, data);
-                ServiceQueue.Enqueue(dataBundle);
-
-                Thread.Sleep(100);
+                if(_sleepTime <= 0)
+                {
+                    continue;
+                }
+                Thread.Sleep(_sleepTime);
             }
 
             Debug.Log("Network thread terminated.");

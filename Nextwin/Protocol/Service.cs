@@ -1,12 +1,9 @@
 ﻿using Nextwin.Protocol;
 
-namespace Nextwin
+namespace Nextwin.Protocol
 {
-    namespace Service
+    public abstract class Service
     {
-        public abstract class Service
-        {
-            public abstract void Execute();
-        }
+        public abstract void Execute();
     }
 }

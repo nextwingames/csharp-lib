@@ -1,131 +1,108 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using Nextwin.Protocol;
-using Nextwin.Util;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
-namespace Nextwin
+namespace Nextwin.Net
 {
-    namespace Net
+    public class NetworkManager
     {
-        public class NetworkManager
+        public bool IsConnected
         {
-            private static NetworkManager _instance;
-            public static NetworkManager Instance
+            get
             {
-                get
+                try
                 {
-                    if(_instance == null)
-                        _instance = new NetworkManager();
-                    return _instance;
+                    return _socket.Connected;
+                }
+                catch(Exception)
+                {
+                    return false;
                 }
             }
+        }
 
-            public bool IsConnected
+        protected Socket _socket;
+
+        protected MemoryStream _stream = new MemoryStream();
+        protected BinaryFormatter _formatter = new BinaryFormatter();
+
+        protected HashSet<string> _connectedAddressSet = new HashSet<string>();
+
+        public NetworkManager() { }
+
+        public NetworkManager(Socket socket)
+        {
+            _socket = socket;
+        }
+
+        /// <summary>
+        /// 클라이언트에서 서버에 연결
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        public virtual void Connect(string ip, int port)
+        {
+            string address = ToAddress(ip, port);
+
+            if(_connectedAddressSet.Contains(address))
             {
-                get 
-                {
-                    try
-                    {
-                        return _socket.Connected; 
-                    }
-                    catch(Exception)
-                    {
-                        return false;
-                    }
-                }
+                Debug.LogError(string.Format("Already connected to {0}", address));
+                return;
             }
 
-            protected Socket _socket;
-            protected HashSet<string> _connectedAddressSet = new HashSet<string>();
+            IPAddress ipAddress = IPAddress.Parse(ip);
+            IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
-            private NetworkManager() { }
+            _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket.Connect(remoteEP);
+            _connectedAddressSet.Add(address);
 
-            /// <summary>
-            /// 서버에 연결
-            /// </summary>
-            public virtual void Connect(string ip, int port)
-            {
-                string address = ToAddress(ip, port);
+            Debug.Log("Socket connected to " + _socket.RemoteEndPoint.ToString());
+        }
 
-                if(_connectedAddressSet.Contains(address))
-                {
-                    Debug.LogError(string.Format("Already connected to {0}", address));
-                    return;
-                }
+        /// <summary>
+        /// 데이터 전송
+        /// </summary>
+        /// <param name="dictionary">전송할 데이터를 담은 Dictionary</param>
+        public virtual void Send(Dictionary<string, object> dictionary)
+        {
+            _formatter.Serialize(_stream, dictionary);
+            byte[] bytes = _stream.ToArray();
 
-                IPAddress ipAddress = IPAddress.Parse(ip);
-                IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
+            _socket.Send(bytes);
+        }
 
-                _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                _socket.Connect(remoteEP);
-                _connectedAddressSet.Add(address);
+        /// <summary>
+        /// 수신한 데이터를 Dictionary로 반환
+        /// </summary>
+        /// <returns></returns>
+        public virtual Dictionary<string, object> Receive()
+        {
+            byte[] bytes = new byte[1024];
+            _socket.Receive(bytes);
 
-                Debug.Log("Socket connected to " + _socket.RemoteEndPoint.ToString());
-            }
+            Dictionary<string, object> data = (Dictionary<string, object>)_formatter.Deserialize(_stream);
+            return data;
+        }
 
-            /// <summary>
-            /// 구조체 전송
-            /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <param name="msgType"></param>
-            /// <param name="obj"></param>            
-            public virtual void Send<T>(int msgType, T obj)
-            {
-                byte[] data = JsonManager.ObjectToBytes(obj);
-
-                Header header = new Header(msgType, data.Length);
-                byte[] head = JsonManager.ObjectToBytes(header);
-
-                // 최종 전송할 패킷(헤더 + 데이터) 바이트화
-                byte[] packet = new byte[head.Length + data.Length];
-                Buffer.BlockCopy(head, 0, packet, 0, head.Length);
-                Buffer.BlockCopy(data, 0, packet, head.Length, data.Length);
-
-                // _socket.BeginSend(packet, 0, packet.Length, 0, new AsyncCallback(SendCallback), _socket);
-                _socket.Send(packet, packet.Length, SocketFlags.None);
-            }
-
-            /// <summary>
-            /// 헤더 수신
-            /// </summary>
-            /// <returns></returns>
-            public virtual Header Receive()
-            {
-                byte[] head = new byte[Header.HeaderLength];
-                _socket.Receive(head, Header.HeaderLength, SocketFlags.None);
-
-                Header header = JsonManager.BytesToObject<Header>(head);
-                return header;
-            }
-
-            /// <summary>
-            /// 데이터 수신
-            /// </summary>
-            /// <param name="header"></param>
-            /// <returns></returns>
-            public virtual byte[] Receive(Header header)
-            {
-                int length = header.Length;
-                byte[] data = new byte[length];
-                _socket.Receive(data, length, SocketFlags.None);
-                return data;
-            }
-
-            /// <summary>
-            /// 연결 해제
-            /// </summary>
-            public virtual void Disconnect()
+        /// <summary>
+        /// 소켓 연결 해제
+        /// </summary>
+        public virtual void Disconnect()
+        {
+            if(_socket.Connected)
             {
                 _socket.Close();
             }
+        }
 
-            private string ToAddress(string ip, int port)
-            {
-                return string.Format("{0}:{1}", ip, port);
-            }
+        private string ToAddress(string ip, int port)
+        {
+            return string.Format("{0}:{1}", ip, port);
         }
     }
 }
