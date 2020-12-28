@@ -7,17 +7,13 @@ namespace Nextwin.Server
 {
     public abstract class Server
     {
-        public void Go()
+        public void Listen()
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, GetPort());
-
-            Socket serverSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Udp);
+            Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                serverSocket.Bind(localEndPoint);
+                serverSocket.Bind(new IPEndPoint(IPAddress.Any, GetPort()));
                 serverSocket.Listen(GetBacklog());
 
                 while(true)

@@ -1,6 +1,4 @@
-﻿using Nextwin.Protocol;
-
-namespace Nextwin.Protocol
+﻿namespace Nextwin.Protocol
 {
     public abstract class Service
     {

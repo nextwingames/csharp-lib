@@ -44,13 +44,13 @@ namespace Nextwin.Server.Thread
             }
             finally
             {
-                OnExitServer();
                 _networkManager.Disconnect();
+                OnExitServer();
             }
         }
 
         /// <summary>
-        /// 클라이언트로부터 데이터를 수신할 때 호출됨
+        /// 클라이언트로부터 데이터를 수신했을 때 호출됨
         /// </summary>
         /// <param name="receivedData"></param>
         protected abstract void OnReceivedData(Dictionary<string, object> receivedData);

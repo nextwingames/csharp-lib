@@ -1,6 +1,5 @@
 ﻿using Nextwin.Client.Util;
 using Nextwin.Net;
-using Nextwin.Protocol;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -73,20 +72,13 @@ namespace Nextwin.Client.Game
                 return;
             }
             
-            OnReceivedData(receivedData, out Service service);
-
-            if(service == null)
-            {
-                return;
-            }
-            service.Execute();
+            OnReceivedData(receivedData);
         }
 
         /// <summary>
-        /// 수신한 Dictionary가 가지고 있는 Key 값에 따라 적절한 service 객체와 dto 객체 생성
+        /// 서버로부터 데이터 수신
         /// </summary>
         /// <param name="receivedData">수신한 데이터</param>
-        /// <param name="service">실질적인 작업을 수행할 서비스 객체</param>
-        protected abstract void OnReceivedData(Dictionary<string, object> receivedData, out Service service);
+        protected abstract void OnReceivedData(Dictionary<string, object> receivedData);
     }
 }
