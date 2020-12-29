@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Nextwin.Util
 {
-    public static class Logger
+    public static class Print
     {
         public static void Log<T>(T message)
         {
