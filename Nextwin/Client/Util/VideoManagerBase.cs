@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,7 +7,7 @@ using UnityEngine.Video;
 
 namespace Nextwin.Client.Util
 {
-    public abstract class VideoManagerBase<TEScreen, TEVideoPlayer> : Singleton<VideoManagerBase<TEScreen, TEVideoPlayer>>
+    public abstract class VideoManagerBase<TScreen, TVideoPlayer> : Singleton<VideoManagerBase<TScreen, TVideoPlayer>> where TScreen : Enum where TVideoPlayer : Enum
     {
         public delegate void Callback();
 
@@ -15,9 +16,9 @@ namespace Nextwin.Client.Util
         protected string _videoResourcesPath;
 
         [SerializeField, Header("Key: Screen name / Value: Screen to play video (RawImage)")]
-        protected SerializableDictionary<TEScreen, RawImage> _screens;
+        protected SerializableDictionary<TScreen, RawImage> _screens;
         [SerializeField, Header("Key: VideoPlayer name / Value: VideoPlayer component")]
-        protected SerializableDictionary<TEVideoPlayer, VideoPlayer> _videoPlayers;
+        protected SerializableDictionary<TVideoPlayer, VideoPlayer> _videoPlayers;
         protected Dictionary<string, Texture> _textures = new Dictionary<string, Texture>();
 
         protected float _waitForCallbackExecute = 3f;
@@ -33,7 +34,7 @@ namespace Nextwin.Client.Util
         /// <param name="videoNameWithDirectoryName">재생할 비디오의 이름(설정한 VideoResourcesPath의 하위 폴더 안에 파일이 있다면 SubDir/VideoName과 같이 명시)</param>
         /// <param name="videoPlayerName">비디오가 재생될 VideoPlayer 이름</param>
         /// <param name="callback">비디오가 끝난 후 실행할 작업</param>
-        public virtual void PlayVideo(string videoNameWithDirectoryName, TEVideoPlayer videoPlayerName, TEScreen screenName, Callback callback = null)
+        public virtual void PlayVideo(string videoNameWithDirectoryName, TVideoPlayer videoPlayerName, TScreen screenName, Callback callback = null)
         {
             VideoPlayer player = GetVideoPlayer(videoPlayerName);
             if(player == null)
@@ -79,7 +80,7 @@ namespace Nextwin.Client.Util
         /// </summary>
         public virtual void PauseAll()
         {
-            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
+            foreach(KeyValuePair<TVideoPlayer, VideoPlayer> item in _videoPlayers)
             {
                 item.Value.Pause();
             }
@@ -89,7 +90,7 @@ namespace Nextwin.Client.Util
         /// 특정 VideoPlayer 일시정지
         /// </summary>
         /// <param name="videoPlayerName">일시정지 시키려는 VideoPlayer 이름</param>
-        public virtual void Pause(TEVideoPlayer videoPlayerName)
+        public virtual void Pause(TVideoPlayer videoPlayerName)
         {
             _videoPlayers[videoPlayerName].Pause();
         }
@@ -99,7 +100,7 @@ namespace Nextwin.Client.Util
         /// </summary>
         public virtual void ResumeAll()
         {
-            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
+            foreach(KeyValuePair<TVideoPlayer, VideoPlayer> item in _videoPlayers)
             {
                 item.Value.Play();
             }
@@ -109,16 +110,16 @@ namespace Nextwin.Client.Util
         /// 특정 VideoPlayer 재생
         /// </summary>
         /// <param name="videoPlayerName">일시정지 시키려는 VideoPlayer 이름</param>
-        public virtual void Resume(TEVideoPlayer videoPlayerName)
+        public virtual void Resume(TVideoPlayer videoPlayerName)
         {
             _videoPlayers[videoPlayerName].Play();
         }
 
-        protected virtual VideoPlayer GetVideoPlayer(TEVideoPlayer videoPlayerName)
+        protected virtual VideoPlayer GetVideoPlayer(TVideoPlayer videoPlayerName)
         {
             if(videoPlayerName == null)
             {
-                foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
+                foreach(KeyValuePair<TVideoPlayer, VideoPlayer> item in _videoPlayers)
                 {
                     return item.Value;
                 }
@@ -145,11 +146,11 @@ namespace Nextwin.Client.Util
             return clip;
         }
 
-        protected virtual RawImage GetScreen(TEScreen screenName)
+        protected virtual RawImage GetScreen(TScreen screenName)
         {
             if(screenName == null)
             {
-                foreach(KeyValuePair<TEScreen, RawImage> item in _screens)
+                foreach(KeyValuePair<TScreen, RawImage> item in _screens)
                 {
                     return item.Value;
                 }
@@ -219,7 +220,7 @@ namespace Nextwin.Client.Util
 
         protected virtual void CheckTargetTextureAssigned()
         {
-            foreach(KeyValuePair<TEVideoPlayer, VideoPlayer> item in _videoPlayers)
+            foreach(KeyValuePair<TVideoPlayer, VideoPlayer> item in _videoPlayers)
             {
                 Texture texture = item.Value.targetTexture;
                 if(texture == null)

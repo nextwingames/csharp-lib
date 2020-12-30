@@ -22,8 +22,6 @@ namespace Nextwin.Client.Game
         [SerializeField]
         protected int _port;
 
-        [SerializeField]
-
         protected virtual void Start()
         {
             _networkManager = CreateNetworkManager();

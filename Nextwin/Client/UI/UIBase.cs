@@ -1,15 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Nextwin.Client.UI
 {
-    public abstract class UIBase<TEUI> : MonoBehaviour
+    public abstract class UIBase<TUI> : MonoBehaviour where TUI : Enum
     {
-        public TEUI ID
+        public TUI ID
         {
             get { return _id; }
         }
         [SerializeField]
-        private TEUI _id;
+        private TUI _id;
 
         protected delegate void Callback();
 

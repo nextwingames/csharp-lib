@@ -1,10 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Nextwin.Client.UI
 {
-    public abstract class UIFrame<TEFrame> : UIBase<TEFrame>
+    public abstract class UIFrame<TFrame> : UIBase<TFrame> where TFrame : Enum
     {
         private GameObject _shadeImageObject;
         private Image _shadeImage;

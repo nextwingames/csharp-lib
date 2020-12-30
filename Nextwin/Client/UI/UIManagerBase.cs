@@ -1,4 +1,5 @@
 ﻿using Nextwin.Client.Util;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,12 +8,12 @@ namespace Nextwin.Client.UI
     /// <summary>
     /// UIManager의 base 추상 클래스, TEFrame과 TEDialog에 대응하는 enum을 정의해야함
     /// </summary>
-    /// <typeparam name="TEFrame">Frame 식별자</typeparam>
-    /// <typeparam name="TEDialog">Dialog 식별자</typeparam>
-    public abstract class UIManagerBase<TEFrame, TEDialog> : Singleton<UIManagerBase<TEFrame, TEDialog>>
+    /// <typeparam name="TFrame">Frame 식별자</typeparam>
+    /// <typeparam name="TDialog">Dialog 식별자</typeparam>
+    public abstract class UIManagerBase<TFrame, TDialog> : Singleton<UIManagerBase<TFrame, TDialog>> where TFrame : Enum where TDialog : Enum
     {
-        protected Dictionary<TEFrame, UIFrame<TEFrame>> _frames;
-        protected Dictionary<TEDialog, UIDialog<TEDialog>> _dialogs;
+        protected Dictionary<TFrame, UIFrame<TFrame>> _frames;
+        protected Dictionary<TDialog, UIDialog<TDialog>> _dialogs;
 
         protected virtual void Start()
         {
@@ -20,7 +21,7 @@ namespace Nextwin.Client.UI
             FindUIs(ref _dialogs);
         }
 
-        public virtual UIFrame<TEFrame> GetFrame(TEFrame frameID)
+        public virtual UIFrame<TFrame> GetFrame(TFrame frameID)
         {
             if(!_frames.ContainsKey(frameID))
             {
@@ -30,7 +31,7 @@ namespace Nextwin.Client.UI
             return _frames[frameID];
         }
 
-        public virtual UIDialog<TEDialog> GetDialog(TEDialog dialogID)
+        public virtual UIDialog<TDialog> GetDialog(TDialog dialogID)
         {
             if(!_dialogs.ContainsKey(dialogID))
             {

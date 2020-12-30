@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Nextwin.Client.UI
 {
-    public abstract class UIDialog<TEDialog> : UIBase<TEDialog>
+    public abstract class UIDialog<TDialog> : UIBase<TDialog> where TDialog : Enum
     {
         private RectTransform _rectTransform;
         private readonly float _waitForCallbackRate = 0.2f;
