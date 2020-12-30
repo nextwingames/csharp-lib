@@ -15,7 +15,6 @@ namespace Nextwin.Client.Game
     {
         protected NetworkManager _networkManager;
         protected Thread _networkThread;
-        protected Type _dataKeyType;
 
         [SerializeField]
         protected string _ip = "127.0.0.1";
@@ -26,8 +25,6 @@ namespace Nextwin.Client.Game
         {
             _networkManager = CreateNetworkManager();
             _networkManager.Connect(_ip, _port);
-
-            _dataKeyType = SetDataKeyType();
         }
 
         /// <summary>
@@ -75,11 +72,6 @@ namespace Nextwin.Client.Game
             }
             
             OnReceivedData(SerializableData.ReadMsgTypeFromBytes(receivedData), receivedData);
-        }
-
-        protected virtual Type SetDataKeyType()
-        {
-            return typeof(Enum);
         }
 
         /// <summary>
