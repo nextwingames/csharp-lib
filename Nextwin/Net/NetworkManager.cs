@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using MessagePack;
+using Nextwin.Protocol;
 
 namespace Nextwin.Net
 {
@@ -26,9 +28,6 @@ namespace Nextwin.Net
         }
 
         protected Socket _socket;
-
-        protected MemoryStream _stream = new MemoryStream();
-        protected BinaryFormatter _formatter = new BinaryFormatter();
 
         protected HashSet<string> _connectedAddressSet = new HashSet<string>();
 
@@ -67,25 +66,25 @@ namespace Nextwin.Net
         /// <summary>
         /// 데이터 전송
         /// </summary>
-        /// <param name="dictionary">전송할 데이터를 담은 Dictionary</param>
-        public virtual void Send(Dictionary<string, object> dictionary)
+        /// <param name="data">전송할 데이터</param>
+        public virtual void Send(SerializableData data)
         {
-            _formatter.Serialize(_stream, dictionary);
-            byte[] bytes = _stream.ToArray();
-
-            _socket.Send(bytes);
+            byte[] buffer = MessagePackSerializer.Serialize(data);
+            _socket.Send(buffer);
         }
 
         /// <summary>
-        /// 수신한 데이터를 Dictionary로 반환
+        /// 수신한 데이터 반환
         /// </summary>
         /// <returns></returns>
-        public virtual Dictionary<string, object> Receive()
+        public virtual byte[] Receive()
         {
-            byte[] bytes = new byte[1024];
-            _socket.Receive(bytes);
+            byte[] buffer = new byte[1024];
+            int size = _socket.Receive(buffer);
 
-            Dictionary<string, object> data = (Dictionary<string, object>)_formatter.Deserialize(_stream);
+            byte[] data = new byte[size];
+            Array.Copy(buffer, data, size);
+
             return data;
         }
 

@@ -1,22 +1,24 @@
 ﻿using MessagePack;
-using System.Collections.Generic;
 
 namespace Nextwin.Protocol
 {
+    /// <summary>
+    /// 데이터 전송을 위한 최상위 클래스로 SerializableData를 상속받는 모든 클래스의 필드변수의 Key는 1부터 시작
+    /// </summary>
     [MessagePackObject]
-    public class SerializableData<TKey>
+    public abstract class SerializableData
     {
         [Key(0)]
-        public Dictionary<TKey, object> DataMap { get; set; }
+        public int MsgType { get; set; }
 
-        public SerializableData()
+        public SerializableData(int msgType)
         {
-            DataMap = new Dictionary<TKey, object>();
+            MsgType = msgType;
         }
 
-        public void Add(TKey key, object value)
+        public static int ReadMsgTypeFromBytes(byte[] bytes)
         {
-            DataMap.Add(key, value);
+            return bytes[1];
         }
     }
 }

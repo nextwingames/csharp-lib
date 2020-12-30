@@ -1,6 +1,6 @@
 ﻿using Nextwin.Net;
+using Nextwin.Protocol;
 using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace Nextwin.Server.Thread
@@ -34,8 +34,8 @@ namespace Nextwin.Server.Thread
             {
                 while(_networkManager.IsConnected)
                 {
-                    Dictionary<string, object> receivedData = _networkManager.Receive();
-                    OnReceivedData(receivedData);
+                    byte[] receivedData = _networkManager.Receive();
+                    OnReceivedData(SerializableData.ReadMsgTypeFromBytes(receivedData), receivedData);
                 }
             }
             catch(Exception e)
@@ -52,8 +52,9 @@ namespace Nextwin.Server.Thread
         /// <summary>
         /// 클라이언트로부터 데이터를 수신했을 때 호출됨
         /// </summary>
-        /// <param name="receivedData"></param>
-        protected abstract void OnReceivedData(Dictionary<string, object> receivedData);
+        /// <param name="msgType">받은 데이터의 메시지 타입</param>
+        /// <param name="receivedData">직렬화된 수신 데이터</param>
+        protected abstract void OnReceivedData(int msgType, byte[] receivedData);
 
         /// <summary>
         /// 클라이언트가 서버에 접속할 때 호출됨

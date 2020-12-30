@@ -1,7 +1,6 @@
 ﻿using Nextwin.Client.Util;
 using Nextwin.Net;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
@@ -12,7 +11,7 @@ namespace Nextwin.Client.Game
     /// </summary>
     public class NetworkThreadManager : Singleton<NetworkThreadManager>
     {
-        public ConcurrentQueue<Dictionary<string, object>> ServiceQueue { get; private set; }
+        public ConcurrentQueue<byte[]> ServiceQueue { get; private set; }
         private NetworkManager _networkManager;
         [SerializeField]
         private int _sleepTime = 0;
@@ -25,7 +24,7 @@ namespace Nextwin.Client.Game
         public Thread CreateNetworkThread(NetworkManager networkManager = null)
         {
             _networkManager = networkManager ?? new NetworkManager();
-            ServiceQueue = new ConcurrentQueue<Dictionary<string, object>>();
+            ServiceQueue = new ConcurrentQueue<byte[]>();
             return new Thread(new ThreadStart(CheckReceivingAndEnqueueServices));
         }
 
@@ -35,7 +34,7 @@ namespace Nextwin.Client.Game
 
             while(_networkManager.IsConnected)
             {
-                Dictionary<string, object> receivedData = _networkManager.Receive();
+                byte[] receivedData = _networkManager.Receive();
                 ServiceQueue.Enqueue(receivedData);
 
                 if(_sleepTime <= 0)

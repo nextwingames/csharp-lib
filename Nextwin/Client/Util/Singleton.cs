@@ -16,11 +16,11 @@ namespace Nextwin.Client.Util
                     {
                         _instance = obj;
                     }
-                    else
-                    {
-                        var newsingleton = new GameObject().AddComponent<T>();
-                        _instance = newsingleton;
-                    }
+                    //else
+                    //{
+                    //    var newsingleton = new GameObject().AddComponent<T>();
+                    //    _instance = newsingleton;
+                    //}
                 }
                 return _instance;
             }

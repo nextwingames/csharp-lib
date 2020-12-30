@@ -1,6 +1,7 @@
 ﻿using Nextwin.Client.Util;
 using Nextwin.Net;
-using System.Collections.Generic;
+using Nextwin.Protocol;
+using System;
 using System.Threading;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ namespace Nextwin.Client.Game
     {
         protected NetworkManager _networkManager;
         protected Thread _networkThread;
+        protected Type _dataKeyType;
 
         [SerializeField]
         protected string _ip = "127.0.0.1";
@@ -26,6 +28,8 @@ namespace Nextwin.Client.Game
         {
             _networkManager = CreateNetworkManager();
             _networkManager.Connect(_ip, _port);
+
+            _dataKeyType = SetDataKeyType();
         }
 
         /// <summary>
@@ -67,18 +71,24 @@ namespace Nextwin.Client.Game
                 return;
             }
 
-            if(!NetworkThreadManager.Instance.ServiceQueue.TryDequeue(out Dictionary<string, object> receivedData))
+            if(!NetworkThreadManager.Instance.ServiceQueue.TryDequeue(out byte[] receivedData))
             {
                 return;
             }
             
-            OnReceivedData(receivedData);
+            OnReceivedData(SerializableData.ReadMsgTypeFromBytes(receivedData), receivedData);
+        }
+
+        protected virtual Type SetDataKeyType()
+        {
+            return typeof(Enum);
         }
 
         /// <summary>
-        /// 서버로부터 데이터 수신
+        /// 서버로부터 데이터를 수신하였을 때 호출됨
         /// </summary>
-        /// <param name="receivedData">수신한 데이터</param>
-        protected abstract void OnReceivedData(Dictionary<string, object> receivedData);
+        /// <param name="msgType">받은 데이터의 메시지 타입</param>
+        /// <param name="receivedData">직렬화된 수신 데이터</param>
+        protected abstract void OnReceivedData(int msgType, byte[] receivedData);
     }
 }
