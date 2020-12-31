@@ -116,9 +116,9 @@ namespace Nextwin.Client.Game
             {
                 assembly = Assembly.Load("MessagePack, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
             }
-            Print.Log($"Found {className} in {assembly.FullName}");
 
             Type type = assembly.GetType(className);
+            Print.Log($"Found {className} in {assembly.FullName}");
             return Activator.CreateInstance(type, true) as IFormatterResolver;
         }
 
