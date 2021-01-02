@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
-using MessagePack;
 using Nextwin.Protocol;
 
 namespace Nextwin.Net
@@ -26,14 +25,18 @@ namespace Nextwin.Net
         }
 
         protected Socket _socket;
-
         protected HashSet<string> _connectedAddressSet = new HashSet<string>();
+        protected ISerializer _serializer;
 
-        public NetworkManager() { }
+        public NetworkManager(ISerializer serializer)
+        {
+            _serializer = serializer;
+        }
 
-        public NetworkManager(Socket socket)
+        public NetworkManager(Socket socket, ISerializer serializer)
         {
             _socket = socket;
+            _serializer = serializer;
         }
 
         /// <summary>
@@ -67,7 +70,7 @@ namespace Nextwin.Net
         /// <param name="data">전송할 데이터</param>
         public virtual void Send(SerializableData data)
         {
-            byte[] buffer = MessagePackSerializer.Serialize(data);
+            byte[] buffer = _serializer.Serialize(data);
             _socket.Send(buffer);
         }
 
