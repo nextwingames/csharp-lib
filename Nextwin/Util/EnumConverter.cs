@@ -9,7 +9,7 @@ namespace Nextwin.Util
         {
             if(!Enum.IsDefined(typeof(T), value))
             {
-                Debug.LogError($"{value} is not defined in enum {typeof(T)}.");
+                Print.LogError($"{value} is not defined in enum {typeof(T)}.");
                 return default;
             }
 

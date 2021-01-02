@@ -68,7 +68,7 @@ namespace Nextwin.Net
         /// 데이터 전송
         /// </summary>
         /// <param name="data">전송할 데이터</param>
-        public virtual void Send(SerializableData data)
+        public virtual void Send<T>(T data)
         {
             byte[] buffer = _serializer.Serialize(data);
             _socket.Send(buffer);

@@ -18,7 +18,7 @@ namespace Nextwin.Util
             byte[] bytes = JsonToBytes(ObjectToJson(obj));
             if(PrintLog)
             {
-                Debug.Log(string.Format("converted byte array from object: {0}", BytesToStringFormat(bytes)));
+                Print.Log(string.Format("converted byte array from object: {0}", BytesToStringFormat(bytes)));
             }
             return bytes;
         }
@@ -44,7 +44,7 @@ namespace Nextwin.Util
         {
             if(PrintLog)
             {
-                Debug.Log(string.Format("byte array for converting to object: {0}", BytesToStringFormat(bytes)));
+                Print.Log(string.Format("byte array for converting to object: {0}", BytesToStringFormat(bytes)));
             }
             return JsonToObject<T>(BytesToJson(bytes));
         }
@@ -54,7 +54,7 @@ namespace Nextwin.Util
             string json = JsonUtility.ToJson(obj);
             if(PrintLog)
             {
-                Debug.Log(string.Format("converted JSON from object: {0}", json));
+                Print.Log(string.Format("converted JSON from object: {0}", json));
             }
             return json;
         }
@@ -63,7 +63,7 @@ namespace Nextwin.Util
         {
             if(PrintLog)
             {
-                Debug.Log(string.Format("JSON for converting to object: {0}", json));
+                Print.Log(string.Format("JSON for converting to object: {0}", json));
             }
             return JsonUtility.FromJson<T>(json);
         }
@@ -80,7 +80,7 @@ namespace Nextwin.Util
             string json = Encoding.Default.GetString(bytes);
             if(PrintLog)
             {
-                Debug.Log($"JSON from received data: {json}");
+                Print.Log($"JSON from received data: {json}");
             }
             string jsonPascal = RenameToPascalCase(json);
             return jsonPascal;
