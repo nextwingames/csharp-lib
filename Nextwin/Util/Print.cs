@@ -1,8 +1,15 @@
 ﻿using System;
-using UnityEngine;
 
 namespace Nextwin.Util
 {
+    public enum ELog
+    {
+        Log,
+        Warning,
+        Error,
+        None
+    }
+
     public static class Print
     {
         public static void Log()
@@ -22,32 +29,44 @@ namespace Nextwin.Util
 
         public static void LogError<T>(T message)
         {
-            LogError(message, 2);
+            Log(message, 2, ELog.Error);
         }
 
-        private static void Log<T>(T message, int stackFrame)
+        public static void LogWarning<T>(T message)
         {
-            try
-            {
-                Debug.Log(message);
-            }
-            catch(Exception)
-            {
-                var frame = new System.Diagnostics.StackFrame(stackFrame);
-                string format = $"[{DateTime.Now:HH:mm:ss}] {message}\n{frame.GetMethod().DeclaringType.Name}\n";
-                Console.WriteLine(format);
-            }
+            Log(message, 2, ELog.Warning);
         }
 
-        private static void LogError<T>(T message, int stackFrame)
+        private static void Log<T>(T message, int stackFrame, ELog logType = ELog.Log)
         {
-            try
+            ChangeConsoleForegroundColor(logType);
+
+            var frame = new System.Diagnostics.StackFrame(stackFrame);
+            string format = $"[{DateTime.Now:HH:mm:ss}] {message}\n[{logType}] - {frame.GetMethod().DeclaringType.Name}\n";
+            Console.WriteLine(format);
+
+            ChangeConsoleForegroundColor(ELog.None);
+        }
+
+        private static void ChangeConsoleForegroundColor(ELog logType)
+        {
+            switch(logType)
             {
-                Debug.LogError(message);
-            }
-            catch(Exception)
-            {
-                
+                case ELog.Log:
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    break;
+
+                case ELog.Warning:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    break;
+
+                case ELog.Error:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    break;
+
+                case ELog.None:
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
             }
         }
     }
