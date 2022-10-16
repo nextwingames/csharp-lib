@@ -49,7 +49,7 @@ namespace Nextwin.Util
             return JsonToObject<T>(BytesToJson(bytes));
         }
 
-        private static string ObjectToJson(object obj)
+        public static string ObjectToJson(object obj)
         {
             string json = JsonUtility.ToJson(obj);
             if(PrintLog)
@@ -59,7 +59,7 @@ namespace Nextwin.Util
             return json;
         }
 
-        private static T JsonToObject<T>(string json)
+        public static T JsonToObject<T>(string json)
         {
             if(PrintLog)
             {
@@ -68,14 +68,14 @@ namespace Nextwin.Util
             return JsonUtility.FromJson<T>(json);
         }
 
-        private static byte[] JsonToBytes(string json)
+        public static byte[] JsonToBytes(string json)
         {
             string jsonCamel = RenameToCamelCase(json);
             byte[] bytes = Encoding.UTF8.GetBytes(jsonCamel);
             return bytes;
         }
 
-        private static string BytesToJson(byte[] bytes)
+        public static string BytesToJson(byte[] bytes)
         {
             string json = Encoding.Default.GetString(bytes);
             if(PrintLog)
@@ -169,7 +169,7 @@ namespace Nextwin.Util
             return pascalJson;
         }
 
-        private static object BytesToStringFormat(byte[] bytes)
+        public static object BytesToStringFormat(byte[] bytes)
         {
             StringBuilder sb = new StringBuilder();
 
