@@ -48,20 +48,27 @@ namespace Nextwin.Net
         {
             string address = ToAddress(ip, port);
 
-            if(_connectedAddressSet.Contains(address))
+            try
             {
-                Debug.LogError(string.Format("Already connected to {0}", address));
-                return;
+                if (_connectedAddressSet.Contains(address))
+                {
+                    Debug.LogError(string.Format("Already connected to {0}", address));
+                    return;
+                }
+
+                IPAddress ipAddress = IPAddress.Parse(ip);
+                IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
+
+                _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _socket.Connect(remoteEP);
+                _connectedAddressSet.Add(address);
+
+                Debug.Log("Socket connected to " + _socket.RemoteEndPoint.ToString());
             }
-
-            IPAddress ipAddress = IPAddress.Parse(ip);
-            IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
-
-            _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _socket.Connect(remoteEP);
-            _connectedAddressSet.Add(address);
-
-            Debug.Log("Socket connected to " + _socket.RemoteEndPoint.ToString());
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
         /// <summary>
@@ -70,8 +77,15 @@ namespace Nextwin.Net
         /// <param name="data">전송할 데이터</param>
         public virtual void Send<T>(T data)
         {
-            byte[] buffer = _serializer.Serialize(data);
-            _socket.Send(buffer);
+            try
+            {
+                byte[] buffer = _serializer.Serialize(data);
+                _socket.Send(buffer);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
         /// <summary>
